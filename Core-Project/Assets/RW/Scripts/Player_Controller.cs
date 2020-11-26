@@ -19,106 +19,124 @@ public class Player_Controller : MonoBehaviour
         # Goes up really fast on slopes [Will need an entire rewrite in the future...]
     */
 
+    public bool characterMotorEnabled = true;
 
+    [Header("Vars")]
+    public Vector3 bottomPoint;
     public float characterSpeed;
     public float jumpSpeed;
     public LayerMask discludePlayer;
+
+    [Header("References")]
     public CharacterController controller;
+    public Ledge_Controller ledge_controller;
     public CapsuleCollider col;
     public Transform cam;
     public Transform playerModel;
+
+    [Header("Additional Options")]
     public bool snapOnSlopeDescend;
+    public float height;
+    public float fixSpeed;
+
 
     Vector3 input;
-
     float verticalForce;
-
     float initialCharacterSpeed = 0f;
-
+    private RaycastHit hit;
+    private bool grounded;
+    private Vector3 velocity;
+    private Vector3 lastPos;
+    private float groundAngle;
+    private float initialSphereDist;
+    public float maxShit;
     private void Awake()
     {
         initialCharacterSpeed = characterSpeed;
+        initialSphereDist = dist;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(playerModel.TransformPoint(bottomPoint),0.01f);
     }
 
     private void Update()
     {
-        input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")) * characterSpeed;
-        input = playerModel.TransformDirection(input);
-        input.y = 0;
-
-        if (input.magnitude >= 0.2f)
-        playerModel.eulerAngles = new Vector3(playerModel.eulerAngles.x, cam.transform.eulerAngles.y, playerModel.eulerAngles.z);
-
-
-
-        if (Input.GetKeyDown(KeyCode.Space) && grounded)
-        {
-           verticalForce += jumpSpeed ;
-        }
-      
-
+        if (characterMotorEnabled)
+        GainInput();
     }
 
-
-    RaycastHit hit;
-    
-    public bool grounded;
-    public Vector3 velocity;
-    public Vector3 maxVelocityCap;
-    public Vector3 minVelocityCap;
-    public Vector3 lastPos;
-    public float slipRate;
-    public float height;
-    public float fixSpeed;
-    void FixedUpdate()
+    public void Enable()
     {
-        Vector3 v = input*Time.fixedDeltaTime;
+        playerModel.up = Vector3.up;
+        characterMotorEnabled = true;
+        controller.enabled = true;
+    }
 
-        float groundAngle = 0f;
-        RaycastHit hit;
+    private void GainInput()
+    {
+            input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")) * characterSpeed;
+            input = playerModel.TransformDirection(input);
+            input.y = 0;
 
-        (grounded,groundAngle, hit) = IsGrounded();
+            if (input.magnitude >= 0.2f)
+                playerModel.eulerAngles = new Vector3(playerModel.eulerAngles.x, cam.transform.eulerAngles.y, playerModel.eulerAngles.z);
+
+            if (Input.GetKeyDown(KeyCode.Space) && grounded)
+            {
+                verticalForce += jumpSpeed;
+            }
+    
+       
+    }
+
+    void GroundCheck()
+    {
+        (grounded, groundAngle, hit) = IsGrounded();
 
         if (groundAngle > controller.slopeLimit) grounded = false;
+    }
 
+    void VerticalForces()
+    {
         if (verticalForce > Physics.gravity.y && !grounded)
         {
             verticalForce += Physics.gravity.y * Time.fixedDeltaTime;
         }
 
-        if (grounded && verticalForce < 0f) { 
+        if (grounded && verticalForce < 0f)
+        {
             verticalForce = 0f;
-            //Provide Stick
-            
         };
 
+    }
 
-        if (groundAngle < controller.slopeLimit)
+    void SlopeClimbing()
+    {
+        if (verticalForce == 0 && groundAngle <= controller.slopeLimit)
         {
-            float perc = 1-(groundAngle / controller.slopeLimit);
-            characterSpeed = Mathf.Clamp(initialCharacterSpeed * perc,initialCharacterSpeed*0.5f,initialCharacterSpeed);
+
+            float perc = 1 - (groundAngle / controller.slopeLimit);
+            characterSpeed = Mathf.Clamp(initialCharacterSpeed * perc, initialCharacterSpeed * 0.4f, initialCharacterSpeed);
+
         }
+        else characterSpeed = initialCharacterSpeed;
+       
 
-        v.y += verticalForce * Time.fixedDeltaTime;
+        if (groundAngle < 5) dist = maxShit;
+        else dist = initialSphereDist;
+        
+    }
 
-        controller.Move(v);
-
-        if (grounded && verticalForce == 0f && snapOnSlopeDescend) {
-            if (groundAngle < 10f)
-                transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, hit.point.y + height, transform.position.z), fixSpeed * Time.fixedDeltaTime);
-            else
-                transform.position = new Vector3(transform.position.x, hit.point.y + height, transform.position.z);
-            
-        }
-
-        velocity = (transform.position - lastPos) / Time.deltaTime;
-
-
+    void WallSlipCheck(Vector3 v)
+    {
         // || (Mathf.Abs(input.magnitude*characterSpeed)>0.1f && velocity.magnitude<=0.05f) OTher Check for Stuckkledd
-        if ((velocity.y == 0 && verticalForce != 0))
+        if ((velocity.y == 0 && verticalForce != 0) )
         {
             Vector3 added = v;
-            
+
             //Check all nearby colliders (except self)
             Collider[] c = Physics.OverlapSphere(transform.position, 20, discludePlayer);
 
@@ -127,29 +145,97 @@ public class Player_Controller : MonoBehaviour
             {
                 Vector3 penDir = new Vector3();
                 float penDist = 0f;
-              
+
                 for (int i = 0; i < 2; i++)
                 {
-                    bool d = Physics.ComputePenetration(col, col.transform.position, col.transform.rotation, this.GetComponent<CapsuleCollider>(), transform.position+added, transform.rotation, out penDir, out penDist);
+                    bool d = Physics.ComputePenetration(col, col.transform.position, col.transform.rotation, this.GetComponent<CapsuleCollider>(), transform.position + added, transform.rotation, out penDir, out penDist);
 
 
                     if (d == false) continue;
 
                     transform.position += -penDir.normalized * penDist;
-                    
+
                 }
 
             }
 
         }
+    }
 
-        lastPos = transform.position;
+    void SnappingBehaviour()
+    {
+        snapOnSlopeDescend = groundAngle >= 5 && groundAngle <= controller.slopeLimit;
 
+        
+
+        if (grounded && verticalForce == 0f && snapOnSlopeDescend)
+        {
+            
+            transform.position = new Vector3(transform.position.x, hit.point.y +height, transform.position.z);
+        }
+    }
+    
+
+    void LedgeClimbAttempt()
+    {
+        if (verticalForce != 0 && !grounded)
+        {
+            Ray ray = new Ray(transform.position, playerModel.forward);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, 0.5f, ledge_controller.climbable))
+            {
+                if (hit.distance < 0.3f)
+                {
+                    //Climbable Surface
+                    if (Vector3.Angle(hit.normal, Vector3.up) >= 60)
+                    {
+                        //Give over control to ledge controller.
+                        characterMotorEnabled = false;
+                        ledge_controller.enabled = true;
+                        ledge_controller.objectHit = hit;
+                    }
+                }
+            }
+
+        }
+    }
+    
+    void FixedUpdate()
+    {
+        if (characterMotorEnabled)
+        {
+            Vector3 v = input * Time.fixedDeltaTime;
+
+            GroundCheck();
+
+            VerticalForces();
+
+            SlopeClimbing();
+
+            v.y += verticalForce * Time.fixedDeltaTime;
+
+            controller.Move(v); //Final Move
+
+            LedgeClimbAttempt();
+
+           
+
+            WallSlipCheck(v);
+            
+            SnappingBehaviour();
+            
+            velocity = (transform.position - lastPos) / Time.deltaTime;
+
+            
+
+            lastPos = transform.position;
+        }
     }
 
     public float dist;
     public float radius;
-    (bool,float, RaycastHit) IsGrounded()
+    public (bool,float, RaycastHit) IsGrounded()
     {
         Vector3 p1 = transform.position;
         float distanceToObstacle = 0;
@@ -166,7 +252,7 @@ public class Player_Controller : MonoBehaviour
             }
             else
             {
-                return (false,0, new RaycastHit());
+                return (false, Vector3.Angle(hit.normal, Vector3.up), hit);
             }
         }
         else
