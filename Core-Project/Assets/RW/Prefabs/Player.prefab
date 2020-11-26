@@ -92,7 +92,6 @@ GameObject:
   - component: {fileID: 4368631726922285142}
   - component: {fileID: 4368631726922285143}
   - component: {fileID: 4368631726922285136}
-  - component: {fileID: 4368631726922285137}
   - component: {fileID: 4368631726922285138}
   - component: {fileID: 4368631726922285139}
   - component: {fileID: 1693926670950021352}
@@ -114,6 +113,7 @@ Transform:
   m_LocalPosition: {x: 1.34, y: 1.24, z: 7.73}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 2503307509549693945}
   - {fileID: 4368631726987781559}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -141,6 +141,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -165,20 +166,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!136 &4368631726922285137
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4368631726922285132}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.57
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!54 &4368631726922285138
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -207,19 +195,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c68afe2617eff45907f5b51ae03bf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerSpeed: 10
-  maxVelocityChange: 1.11
-  solverIterations: 2
+  characterSpeed: 0
+  jumpSpeed: 0
   discludePlayer:
     serializedVersion: 2
     m_Bits: 311
-  weaponAnimator: {fileID: 4368631726136785815}
-  aimPoint: {fileID: 4368631726570119453}
-  camera: {fileID: 4368631726987781552}
-  cameraController: {fileID: 4368631726987781558}
-  fireRate: 0.2
-  crosshair: {fileID: 0}
-  source: {fileID: 1693926670950021352}
+  controller: {fileID: 0}
+  col: {fileID: 0}
+  cam: {fileID: 0}
+  playerModel: {fileID: 0}
+  snapOnSlopeDescend: 0
+  grounded: 0
+  velocity: {x: 0, y: 0, z: 0}
+  maxVelocityCap: {x: 0, y: 0, z: 0}
+  minVelocityCap: {x: 0, y: 0, z: 0}
+  lastPos: {x: 0, y: 0, z: 0}
+  slipRate: 0
+  height: 0
+  fixSpeed: 0
+  dist: 0
+  radius: 0
 --- !u!82 &1693926670950021352
 AudioSource:
   m_ObjectHideFlags: 0
@@ -348,7 +343,7 @@ Transform:
   m_Children:
   - {fileID: 4368631726136785808}
   m_Father: {fileID: 4368631726922285142}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &4368631726987781552
 Camera:
@@ -418,6 +413,36 @@ MonoBehaviour:
   m_MoveSpeed: 0
   m_MoveSpeedIncrement: 0
   m_Turbo: 0
+--- !u!1 &4820685304633340656
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2503307509549693945}
+  m_Layer: 9
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2503307509549693945
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4820685304633340656}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.702, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4368631726922285142}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6624968877339482958
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,6 +530,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -530,3 +556,4 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}

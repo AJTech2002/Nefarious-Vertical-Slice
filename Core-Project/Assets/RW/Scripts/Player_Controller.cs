@@ -1,32 +1,4 @@
-﻿/*
- * Copyright (c) 2020 Razeware LLC
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * Notwithstanding the foregoing, you may not use, copy, modify, merge, publish, 
- * distribute, sublicense, create a derivative work, and/or sell copies of the 
- * Software in any work that is designed, intended, or marketed for pedagogical or 
- * instructional purposes related to programming, coding, application development, 
- * or information technology.  Permission for such use, copying, modification,
- * merger, publication, distribution, sublicensing, creation of derivative works, 
- * or sale is expressly withheld.
- *    
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+﻿
 
 using System;
 using System.Collections;
@@ -38,147 +10,168 @@ using UnityEngine.UI;
 public class Player_Controller : MonoBehaviour
 {
 
-    [Header("Player Options")]
-    [SerializeField]
-    public float playerSpeed = 10;
-    public float maxVelocityChange;
-    public int solverIterations = 2; //How many collision iterations it solves for
+    /* 
+        TODO: This is a prototype class only, it is not to be used during production due to the various bugs such as: 
+        # Inability to descend slopes smoothly (it jumps because it looses contact with ground and applies gravity, need snapping)
+        # Proper grounding function
+        # Snapping to ground without breaking everything else (preferrably done through the character controller move)
+        # Slope Angle calculation isn't always right (need a more intense appraoch at this)...
+        # Goes up really fast on slopes [Will need an entire rewrite in the future...]
+    */
+
+
+    public float characterSpeed;
+    public float jumpSpeed;
     public LayerMask discludePlayer;
-
-    [Header("Phys")]
-    public Vector3 top;
-    public Vector3 bottom;
-    public float maxDist;
-    public float groundedDist;
-    public float stepPred;//Layer mask for player movement
-
-    [Header("Weapon Configuration")]
-    public Animator weaponAnimator;
-    public Transform aimPoint;
-    public Camera camera;
-    public FreeCamera cameraController;
-    public float fireRate;
-
-    public Image crosshair;
-    public AudioSource source;
-
-    private bool aiming = false;
-    private float fireTimer = 0f;
-    private Rigidbody rBody; //Rigidbody Reference
-
-    [Header("References")]
-    public GameObject bullet;
+    public CharacterController controller;
+    public CapsuleCollider col;
+    public Transform cam;
     public Transform playerModel;
+    public bool snapOnSlopeDescend;
 
-    void Start()
+    Vector3 input;
+
+    float verticalForce;
+
+    float initialCharacterSpeed = 0f;
+
+    private void Awake()
     {
-        rBody = GetComponent<Rigidbody>();
-        
+        initialCharacterSpeed = characterSpeed;
     }
 
-    //The Update methods deals with the input handling
     private void Update()
     {
+        input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")) * characterSpeed;
+        input = playerModel.TransformDirection(input);
+        input.y = 0;
+
+        if (input.magnitude >= 0.2f)
+        playerModel.eulerAngles = new Vector3(playerModel.eulerAngles.x, cam.transform.eulerAngles.y, playerModel.eulerAngles.z);
+
+
+
+        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+        {
+           verticalForce += jumpSpeed ;
+        }
+      
+
     }
 
 
     RaycastHit hit;
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawWireSphere(transform.position + top, 0.05f);
-        Gizmos.DrawWireSphere(transform.position + bottom, 0.05f);
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(hit.point, 0.05f);
-    }
-
-    //The fixed update is for movement that will be consistent across all devices
+    
+    public bool grounded;
+    public Vector3 velocity;
+    public Vector3 maxVelocityCap;
+    public Vector3 minVelocityCap;
+    public Vector3 lastPos;
+    public float slipRate;
+    public float height;
+    public float fixSpeed;
     void FixedUpdate()
     {
-        CapsuleCollider colC = this.GetComponent<CapsuleCollider>();
-        //Target velocity from WASD keys
-        Vector3 targetVelocity = camera.transform.TransformDirection
-            (
-                new Vector3(Input.GetAxis("Horizontal"),
-                0,
-                Input.GetAxis("Vertical")) * playerSpeed * Time.deltaTime
-            );
+        Vector3 v = input*Time.fixedDeltaTime;
 
-        //Clamping Velocity
-        var velocityChange = targetVelocity;
-        velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-        velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
-        velocityChange.y = 0;
+        float groundAngle = 0f;
+        RaycastHit hit;
 
-        playerModel.eulerAngles = new Vector3(playerModel.eulerAngles.x, camera.transform.eulerAngles.y, playerModel.eulerAngles.z);
+        (grounded,groundAngle, hit) = IsGrounded();
 
-        //Check all nearby colliders (except self)
-        Collider[] c = Physics.OverlapSphere(transform.position, 20, discludePlayer);
-        Vector3 accumulatedChanges = Vector3.zero;
-        //Custom Collision Implementation
-        foreach (Collider col in c)
+        if (groundAngle > controller.slopeLimit) grounded = false;
+
+        if (verticalForce > Physics.gravity.y && !grounded)
         {
-            Vector3 penDir = new Vector3();
-            float penDist = 0f;
-            Vector3 newDir = velocityChange;
-           
+            verticalForce += Physics.gravity.y * Time.fixedDeltaTime;
+        }
 
-            for (int i = 0; i < solverIterations; i++)
+        if (grounded && verticalForce < 0f) { 
+            verticalForce = 0f;
+            //Provide Stick
+            
+        };
+
+
+        if (groundAngle < controller.slopeLimit)
+        {
+            float perc = 1-(groundAngle / controller.slopeLimit);
+            characterSpeed = Mathf.Clamp(initialCharacterSpeed * perc,initialCharacterSpeed*0.5f,initialCharacterSpeed);
+        }
+
+        v.y += verticalForce * Time.fixedDeltaTime;
+
+        controller.Move(v);
+
+        if (grounded && verticalForce == 0f && snapOnSlopeDescend) {
+            if (groundAngle < 10f)
+                transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, hit.point.y + height, transform.position.z), fixSpeed * Time.fixedDeltaTime);
+            else
+                transform.position = new Vector3(transform.position.x, hit.point.y + height, transform.position.z);
+            
+        }
+
+        velocity = (transform.position - lastPos) / Time.deltaTime;
+
+
+        // || (Mathf.Abs(input.magnitude*characterSpeed)>0.1f && velocity.magnitude<=0.05f) OTher Check for Stuckkledd
+        if ((velocity.y == 0 && verticalForce != 0))
+        {
+            Vector3 added = v;
+            
+            //Check all nearby colliders (except self)
+            Collider[] c = Physics.OverlapSphere(transform.position, 20, discludePlayer);
+
+            //Custom Collision Implementation
+            foreach (Collider col in c)
             {
-                bool d = Physics.ComputePenetration(col, col.transform.position, col.transform.rotation, colC, transform.position + newDir, transform.rotation, out penDir, out penDist);
+                Vector3 penDir = new Vector3();
+                float penDist = 0f;
+              
+                for (int i = 0; i < 2; i++)
+                {
+                    bool d = Physics.ComputePenetration(col, col.transform.position, col.transform.rotation, this.GetComponent<CapsuleCollider>(), transform.position+added, transform.rotation, out penDir, out penDist);
 
-                if (d == false) continue;
 
-                transform.position += -penDir.normalized * penDist;
-                accumulatedChanges += -penDir.normalized * penDist;
-                newDir = -penDir.normalized * penDist;
+                    if (d == false) continue;
+
+                    transform.position += -penDir.normalized * penDist;
+                    
+                }
+
             }
 
         }
 
-        //Moves the player towards the desired velocity with the added gravity
-        Ray ray = new Ray(transform.position + top + velocityChange.normalized * stepPred, Vector3.down);
+        lastPos = transform.position;
 
+    }
 
-        if (Physics.Raycast(ray, out hit, maxDist, discludePlayer))
+    public float dist;
+    public float radius;
+    (bool,float, RaycastHit) IsGrounded()
+    {
+        Vector3 p1 = transform.position;
+        float distanceToObstacle = 0;
+        RaycastHit hit;
+        // Cast a sphere wrapping character controller 0.1 meter down to check if it hits anything
+       
+        if (Physics.SphereCast(p1, radius, Vector3.down, out hit))
         {
-            
-            Debug.DrawLine(ray.origin, hit.point, Color.red);
-        }
 
-        //Grounded Ray
-        Ray groundRay = new Ray(transform.position, Vector3.down);
-        RaycastHit groundHit;
-
-        bool grounded = false;
-
-        if (Physics.Raycast(groundRay, out groundHit))
-        {
-            if (groundHit.distance < groundedDist)
+            distanceToObstacle = hit.distance;
+            if (distanceToObstacle < dist)
             {
-                grounded = true;
+                return (true, Vector3.Angle(hit.normal,Vector3.up), hit);
             }
             else
             {
-               
-                if (Mathf.Abs(accumulatedChanges.magnitude) <= 0.0001f)
-                {
-                    velocityChange += Physics.gravity * Time.deltaTime;
-                    grounded = false;
-                }
+                return (false,0, new RaycastHit());
             }
         }
-
-        /*
-        if (velocityChange != Vector3.zero)
+        else
         {
-            velocityChange.y = Mathf.Clamp(velocityChange.y,Mathf.Clamp(hit.point.y - (transform.position + bottom).y, -maxVelocityChange, maxVelocityChange),0.1f);
-            print("EXEC");
+            return (false,0, new RaycastHit());
         }
-        print(velocityChange.y);
-        */
-
-        transform.position += (velocityChange );
-        
-
     }
 }
