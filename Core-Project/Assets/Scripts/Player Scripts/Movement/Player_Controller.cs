@@ -15,9 +15,14 @@ public class Player_Controller : MonoBehaviour
         # Inability to descend slopes smoothly (it jumps because it looses contact with ground and applies gravity, need snapping)
         # Proper grounding function
         # Snapping to ground without breaking everything else (preferrably done through the character controller move)
+        
         # Slope Angle calculation isn't always right (need a more intense appraoch at this)...
+
         # Goes up really fast on slopes [Will need an entire rewrite in the future...]
     */
+
+    //!!SLOPE ANGLE CALCULATION IS WRONG CONDUCT WITH TWO RAYS!
+
 
     public bool characterMotorEnabled = true;
 
@@ -39,7 +44,7 @@ public class Player_Controller : MonoBehaviour
     public float height;
     public float fixSpeed;
 
-
+    public float gravityScale;
     Vector3 input;
     float verticalForce;
     float initialCharacterSpeed = 0f;
@@ -65,7 +70,12 @@ public class Player_Controller : MonoBehaviour
     private void Update()
     {
         if (characterMotorEnabled)
-        GainInput();
+        {
+            GainInput();
+            //THIS USED TO BE IN FIXED UPDATE AT A TIMESTEP OF 0.001 however this saves performance.
+            controller.Move(v);
+        }
+
     }
 
     public void Enable()
@@ -101,9 +111,9 @@ public class Player_Controller : MonoBehaviour
 
     void VerticalForces()
     {
-        if (verticalForce > Physics.gravity.y && !grounded)
+        if (verticalForce > Physics.gravity.y* gravityScale && !grounded)
         {
-            verticalForce += Physics.gravity.y * Time.fixedDeltaTime;
+            verticalForce += Physics.gravity.y * gravityScale * Time.fixedDeltaTime;
         }
 
         if (grounded && verticalForce < 0f)
@@ -166,8 +176,6 @@ public class Player_Controller : MonoBehaviour
     {
         snapOnSlopeDescend = groundAngle >= 5 && groundAngle <= controller.slopeLimit;
 
-        
-
         if (grounded && verticalForce == 0f && snapOnSlopeDescend)
         {
             
@@ -199,13 +207,18 @@ public class Player_Controller : MonoBehaviour
             }
 
         }
+
+
+        //Final Move
+
     }
-    
+
+    Vector3 v = Vector3.zero;
     void FixedUpdate()
     {
         if (characterMotorEnabled)
         {
-            Vector3 v = input * Time.fixedDeltaTime;
+            v = input * Time.fixedDeltaTime;
 
             GroundCheck();
 
@@ -215,24 +228,25 @@ public class Player_Controller : MonoBehaviour
 
             v.y += verticalForce * Time.fixedDeltaTime;
 
-            controller.Move(v); //Final Move
 
             LedgeClimbAttempt();
 
-           
+
 
             WallSlipCheck(v);
-            
-            SnappingBehaviour();
-            
-            velocity = (transform.position - lastPos) / Time.deltaTime;
 
-            
+            SnappingBehaviour();
+
+            velocity = (transform.position - lastPos) / Time.fixedDeltaTime;
+
+
 
             lastPos = transform.position;
+
         }
     }
 
+   
     public float dist;
     public float radius;
     public (bool,float, RaycastHit) IsGrounded()
