@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 6393725573079783521}
   m_Layer: 5
   m_Name: Item
-  m_TagString: Untagged
+  m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -89,6 +89,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914688c8081e1204ba9c806e6760a14c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  instantiatedPanels: []
 --- !u!114 &6393725573079783521
 MonoBehaviour:
   m_ObjectHideFlags: 0

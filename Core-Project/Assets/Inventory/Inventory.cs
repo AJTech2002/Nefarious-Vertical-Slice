@@ -7,10 +7,11 @@ public class Inventory : MonoBehaviour
 {
     public int totalItem = 42;
     public Transform panel;
-    public Transform itemPanel;
+    public Transform itemUI;
     public Transform gridLayoutGroup;
-    public Transform itemsGridLayoutGroup;
+    public Transform itemPanel;
     public List<RectTransform> instantiatedPanels = new List<RectTransform>();
+    public List<RectTransform> instantiatedItemPanels = new List<RectTransform>();
     public List<Item> uniqueItems = new List<Item>();
     public int currentListSize;
 
@@ -43,8 +44,10 @@ public class Inventory : MonoBehaviour
 
     void updateUI(Item grabbedItem)
     {
-        Transform t = Instantiate(itemPanel, instantiatedPanels[inventorySlots.Count-1].position, Quaternion.identity);
-        t.SetParent(itemsGridLayoutGroup, false);
+        Transform t = Instantiate(itemUI, instantiatedPanels[inventorySlots.Count-1].position, Quaternion.identity, itemPanel);
+        instantiatedItemPanels.Add(t.GetComponent<RectTransform>());
+        t.gameObject.GetComponent<DragOut>().instantiatedPanels = instantiatedPanels;
+        t.gameObject.GetComponent<DragOut>().instantiatedItemPanels = instantiatedItemPanels;
         inventorySlots.Add(grabbedItem);
     }
 
