@@ -9,7 +9,6 @@ namespace NPCAI.Actions
 	{
 		private List<Transform> points;
 		private int destPoint = 0;
-		private NavMeshAgent agent;
 
 		//different constructors depending on how many points already existing at
 		//time of action creaction and what format they're in.
@@ -86,6 +85,8 @@ namespace NPCAI.Actions
 			// between points (ie, the agent doesn't slow down as it
 			// approaches a destination point).
 			agent.autoBraking = false;
+			//The agent will stop directly on the target.
+			agent.stoppingDistance = 0;
 		}
 
 		void ResumeCurrentPoint ()
@@ -101,6 +102,8 @@ namespace NPCAI.Actions
 			// between points (ie, the agent doesn't slow down as it
 			// approaches a destination point).
 			agent.autoBraking = false;
+			//The agent will stop directly on the target.
+			agent.stoppingDistance = 0;
 		}
 
 		//Overriding methods from Action abstract class.
@@ -111,16 +114,12 @@ namespace NPCAI.Actions
 			ResumeCurrentPoint();
 		}
 
-		public override void PauseAction () { base.PauseAction(); }
-
 		public override void ResumeAction ()
 		{
 			base.ResumeAction();
 
 			ResumeCurrentPoint();
 		}
-
-		public override void StopAction () { base.StopAction(); }
 
 		public override void ReachedTargetPoint ()
 		{

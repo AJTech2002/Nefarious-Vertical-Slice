@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 public class Player_Controller : MonoBehaviour
 {
+    public static Player_Controller player;
 
     /* 
         TODO: This is a prototype class only, it is not to be used during production due to the various bugs such as: 
@@ -55,8 +56,12 @@ public class Player_Controller : MonoBehaviour
     private float groundAngle;
     private float initialSphereDist;
     public float maxShit;
+
     private void Awake()
     {
+        if (player == null)
+            player = this;
+
         initialCharacterSpeed = characterSpeed;
         initialSphereDist = dist;
     }

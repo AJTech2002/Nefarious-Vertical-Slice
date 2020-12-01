@@ -4272,7 +4272,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2022743984}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -5.124, y: 2.785, z: 6.872}
+  m_LocalPosition: {x: -9.16, y: -0.32, z: -15.84}
   m_LocalScale: {x: 0.3000003, y: 0.3, z: 0.3}
   m_Children: []
   m_Father: {fileID: 540579631}
@@ -4494,6 +4494,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4b6e7dbfb048ad4cb99843742d27649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  health: 100
+  viewRadius: 4
   points:
   - {fileID: 491244257}
   - {fileID: 2020859522}
@@ -4513,7 +4515,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 1.5
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
