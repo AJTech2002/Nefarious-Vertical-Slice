@@ -2,15 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using NPCAI.Actions;
 
-public class PatrolAI : BaseAI
+namespace NPCAI
 {
-    public Transform[] points;
+	public class PatrolAI : BaseAI
+	{
+		public Transform[] points;
 
-    void Start ()
-    {
-        PatrolAction action = new PatrolAction(agent, points);
+		void Start ()
+		{
+			PatrolAction action = new PatrolAction(agent, points);
 
-        SetCurrentAction(action);
-    }
+			SetCurrentAction(action);
+		}
+	}
 }
