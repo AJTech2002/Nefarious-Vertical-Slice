@@ -2479,7 +2479,7 @@ GameObject:
   - component: {fileID: 1104902925}
   - component: {fileID: 1104902930}
   - component: {fileID: 1104902929}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4461,7 +4461,7 @@ GameObject:
   - component: {fileID: 2058299582}
   - component: {fileID: 2058299581}
   - component: {fileID: 2058299579}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: AI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4476,7 +4476,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2058299577}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.73, y: 0.868, z: -4.0528}
+  m_LocalPosition: {x: -3.58, y: 0.868, z: -4.76}
   m_LocalScale: {x: 0.3734966, y: 0.3734966, z: 0.3734966}
   m_Children: []
   m_Father: {fileID: 949795976}
@@ -4505,6 +4505,7 @@ MonoBehaviour:
   - {fileID: 195542994}
   - {fileID: 1166884712}
   - {fileID: 828166837}
+  stoppingDistance: 0.8
 --- !u!195 &2058299581
 NavMeshAgent:
   m_ObjectHideFlags: 0
