@@ -1,11 +1,20 @@
 fileFormatVersion: 2
-guid: 2d3844d1557e6d7438240450fefc2a29
+guid: e24bf369dfaffcd4ca1b9e05ef877358
 ModelImporter:
   serializedVersion: 20101
   internalIDToNameTable:
   - first:
-      74: -623603649343465320
-    second: Scene
+      74: 5562861726019590950
+    second: rig|21175fa519a42433a5c18492319f654bAction
+  - first:
+      74: 656279745236512985
+    second: rig|Animations
+  - first:
+      74: 4885872131358971340
+    second: rig|PlaneAction
+  - first:
+      74: 1444733745673076434
+    second: rig|rigAction.001
   externalObjects: {}
   materials:
     materialImportMode: 1
@@ -42,10 +51,10 @@ ModelImporter:
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
-    importVisibility: 0
+    importVisibility: 1
     importBlendShapes: 1
-    importCameras: 0
-    importLights: 0
+    importCameras: 1
+    importLights: 1
     fileIdsGeneration: 2
     swapUVChannels: 0
     generateSecondaryUV: 0
