@@ -10,7 +10,6 @@ namespace NPCAI.Actions
 		public bool Started
 		{
 			get { return started; }
-			set { started = started || value; }
 		}
 
 		public bool UpdateRequired
